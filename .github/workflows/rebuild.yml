@@ -123,18 +123,16 @@ jobs:
           script: |
             const keep = `rebuild-${process.env.FINGERPRINT}`;
             const { owner, repo } = context.repo;
-            const { data } = await github.rest.actions.listActionsCachesForRepo({
-              owner,
-              repo,
-              per_page: 100,
-            });
+            const { data } = await github.request(
+              'GET /repos/{owner}/{repo}/actions/caches',
+              { owner, repo, per_page: 100 }
+            );
             for (const cache of data.actions_caches) {
               if (cache.key.startsWith('rebuild-') && cache.key !== keep) {
-                await github.rest.actions.deleteActionsCacheById({
-                  owner,
-                  repo,
-                  cache_id: cache.id,
-                });
+                await github.request(
+                  'DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}',
+                  { owner, repo, cache_id: cache.id }
+                );
                 core.info(`deleted cache ${cache.id} (${cache.key})`);
               }
             }
