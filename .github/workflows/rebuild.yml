@@ -146,7 +146,7 @@ jobs:
     permissions:
       actions: write
     env:
-      IMAGE: ${{ env.IMAGE }}:latest
+      IMAGE: ghcr.io/${{ github.repository }}:latest
       MODEL: llama3.2:1b-instruct-q2_K
       OLLAMA_DIR: /tmp/ollama-models
     steps:
