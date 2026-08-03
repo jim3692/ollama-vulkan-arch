@@ -168,6 +168,11 @@ jobs:
       - name: Run test
         run: ./test.sh
 
+      - name: Fix model cache ownership
+        if: steps.model-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo chown -R "$(id -u):$(id -g)" /tmp/ollama-models
+
       - name: Save model cache
         if: steps.model-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
