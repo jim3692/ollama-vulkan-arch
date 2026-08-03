@@ -23,3 +23,10 @@ Images are rebuilt automatically every day whenever upstream changes (new ollama
 ```sh
 ./build.sh
 ```
+
+## Test locally
+
+```sh
+./build.sh          # build the image first
+./test.sh           # runs llama3.2:1b-instruct-q2_K on CPU and checks for an answer
+```

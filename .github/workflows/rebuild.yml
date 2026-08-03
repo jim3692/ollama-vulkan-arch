@@ -138,3 +138,41 @@ jobs:
                 core.info(`deleted cache ${cache.id} (${cache.key})`);
               }
             }
+
+  test:
+    needs: build
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    env:
+      IMAGE: ${{ env.IMAGE }}:latest
+      MODEL: llama3.2:1b-instruct-q2_K
+      OLLAMA_DIR: /tmp/ollama-models
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore model cache
+        id: model-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/ollama-models
+          key: ollama-models
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run test
+        run: ./test.sh
+
+      - name: Save model cache
+        if: steps.model-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/ollama-models
+          key: ollama-models
