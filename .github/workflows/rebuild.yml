@@ -179,3 +179,30 @@ jobs:
         with:
           path: /tmp/ollama-models
           key: ollama-models
+
+  prune:
+    needs: test
+    if: needs.test.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Prune GHCR packages older than 7 days
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cutoff=$(date -u -d '7 days ago' +%s)
+          deleted=0
+          while read -r id created_at; do
+            created=$(date -u -d "$created_at" +%s)
+            if (( created < cutoff )); then
+              gh api --method DELETE \
+                "users/${{ github.repository_owner }}/packages/container/$(basename ${{ github.repository }})/versions/$id" \
+                >/dev/null
+              deleted=$((deleted + 1))
+            fi
+          done < <(gh api \
+            "users/${{ github.repository_owner }}/packages/container/$(basename ${{ github.repository }})/versions?per_page=100" \
+            --paginate --jq '.[] | "\(.id) \(.created_at)"')
+          echo "deleted $deleted packages older than 7 days"
